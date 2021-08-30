@@ -61,13 +61,10 @@ namespace basicblazorexamplewebapp.Controllers
                 
                 if (!HostMap.TryAdd(hostname, count))
                     count = HostMap[hostname];
-                
-                Console.WriteLine("Count: "+count);
 
                 if (!IndexGroup.TryAdd(count, guidList = new List<Guid>()))
                 {
                     guidList = IndexGroup[count];
-                    Console.WriteLine("didn't add");
                 }
             }
 
@@ -138,14 +135,12 @@ namespace basicblazorexamplewebapp.Controllers
             //need to setup the index groups and register guids.
             var items = SetupIndexGroups(indices);
 
-
             //skip to only what is needed to sort through.
             hold = perform.Skip(page * interval).Take(interval).ToList();
             
             return hold.Select((t, h) =>
             {
                 Console.WriteLine((page*interval)+h);
-                Console.WriteLine("item count: "+items.Count);
                 return (dynamic) new
                 {
                     Guid = items[(page*interval)+h],
@@ -158,6 +153,7 @@ namespace basicblazorexamplewebapp.Controllers
         {
             await ctx.Names.AddAsync(name);
             await ctx.SaveChangesAsync();
+            Transact();
         }
         
         public int GetHostGroup() => HostMap.ContainsKey(HttpContext.Connection.RemoteIpAddress.ToString()) ? HostMap[HttpContext.Connection.RemoteIpAddress.ToString()] : -1;
@@ -178,7 +174,15 @@ namespace basicblazorexamplewebapp.Controllers
 
             IndexMap.TryRemove(stuff, out var things);
             indexGroup.Remove(stuff);
-            ctx.Names.Remove(ctx.Names.Single(e=>e.id == things.id));
+
+            Func<Name, bool> doStuff = (name) =>
+            {
+                bool matched = name.id == things.id;
+                return matched;
+            };
+            
+            var removed = ctx.Names.Remove(ctx.Names.Single(doStuff));
+            
             await ctx.SaveChangesAsync();
             return true;
         }
