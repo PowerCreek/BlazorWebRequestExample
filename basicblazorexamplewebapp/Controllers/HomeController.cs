@@ -100,18 +100,47 @@ namespace basicblazorexamplewebapp.Controllers
             RemoveIndexGroup(group);
         }
         
-        public dynamic[] FetchItems<T>(IQueryable<T> ctx, int page, int interval)
+        // public dynamic[] FetchItems<T>(IQueryable<T> ctx, int page, int interval)
+        // {
+        //     //need to create all of the indices to construct guids for every name.
+        //     var hold = ctx.ToList();
+        //
+        //     var indices = hold.Select(e => (int)(e as dynamic).id).ToArray();
+        //
+        //     //need to setup the index groups and register guids.
+        //     var items = SetupIndexGroups(indices);
+        //
+        //     //skip to only what is needed to sort through.
+        //     hold = ctx.Skip(page * interval).Take(interval).ToList();
+        //     
+        //     return hold.Select((t, h) =>
+        //     {
+        //         Console.WriteLine((page*interval)+h);
+        //         Console.WriteLine("item count: "+items.Count);
+        //         return (dynamic) new
+        //         {
+        //             Guid = items[(page*interval)+h],
+        //             Instance = t
+        //         };
+        //     }).ToArray();
+        // }
+        
+        public dynamic[] FetchItems<T>(IQueryable<T> ctx, int page, int interval, Func<IQueryable<T>, IOrderedQueryable<T>> doThing = null)
         {
             //need to create all of the indices to construct guids for every name.
-            var hold = ctx.ToList();
+            IEnumerable<T> perform = doThing?.Invoke(ctx); 
+            perform??=ctx;
+            
+            var hold = perform.ToList();
 
             var indices = hold.Select(e => (int)(e as dynamic).id).ToArray();
 
             //need to setup the index groups and register guids.
             var items = SetupIndexGroups(indices);
 
+
             //skip to only what is needed to sort through.
-            hold = ctx.Skip(page * interval).Take(interval).ToList();
+            hold = perform.Skip(page * interval).Take(interval).ToList();
             
             return hold.Select((t, h) =>
             {
@@ -174,7 +203,10 @@ namespace basicblazorexamplewebapp.Controllers
             return "transact";
         }
 
-        [HttpGet("/fetchnames")]
+        public Func<IQueryable<Name>, IOrderedQueryable<Name>> NameQuery = (names) => names.OrderBy(e => e.Value);
+        
+
+            [HttpGet("/fetchnames")]
         public async Task<string> GetFetchNames([FromServices] MasterDBContext ctx, [FromBody] string jpaging)
         {
             Console.WriteLine(jpaging);
@@ -183,7 +215,7 @@ namespace basicblazorexamplewebapp.Controllers
             
             Console.WriteLine(paging.Page +":"+ paging.Interval);
             
-            return JsonConvert.SerializeObject(FetchItems(ctx.Names, paging.Page, paging.Interval).Select(e =>
+            return JsonConvert.SerializeObject(FetchItems(ctx.Names, paging.Page, paging.Interval, NameQuery).Select(e =>
                 {
                     Console.WriteLine(e.Guid+":"+e.Instance.Value);
                     
@@ -206,7 +238,7 @@ namespace basicblazorexamplewebapp.Controllers
             
             Console.WriteLine(paging.Page +":"+ paging.Interval);
             
-            return JsonConvert.SerializeObject(FetchItems(ctx.Names, paging.Page, paging.Interval).Select(e =>
+            return JsonConvert.SerializeObject(FetchItems(ctx.Names, paging.Page, paging.Interval, NameQuery).Select(e =>
                 {
                     Console.WriteLine(e.Guid+":"+e.Instance.Value);
                     

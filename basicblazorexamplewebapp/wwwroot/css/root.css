@@ -57,6 +57,7 @@
     padding-left: 20px;
     text-transform: capitalize;
     text-overflow: ellipsis;
+    white-space: nowrap;
     overflow: hidden;
     align-self: center;
 }
