@@ -5,37 +5,39 @@
 
 @EntryModalInstance.Invoke()
 
-<div class="button-row">
+<div @key=@(Guid.NewGuid().ToString()) class="button-row">
     @foreach (var item in ConfigurationButtons)
     {
         @item;
     }
 </div>
-<div class="table-type-a">
+<div @key=@TableChangeKey class="table-type-a">
     @{
         var items = GetTableElements();
         var hold = items.ToArray();
-        foreach(var item in hold)
+        foreach (var item in hold)
         {
-            @item;
+            @item
         }
-        for (int i = 0; i < 6-hold.Length; i++)
+
+        for (int i = 0; i < 6 - hold.Length; i++)
         {
             @((RenderFragment) (@<div class="table-entry soft">
                                     <div class="entry-content"></div>
                                     <div class="button">X</div>
-                                    </div>));
+                                </div>));
         }
+
     }
 </div>
-<div class="table-nav">
+<div @key=@(Guid.NewGuid().ToString()) class="table-nav">
     <ConfiguredButton HTML="left" OnButton="@LeftNavAction"/>
     <ConfiguredButton HTML="right" OnButton="@RightNavAction"/>
 </div>
 
 @code {
-    
-    
+
+    public string TableChangeKey { get; set; } ="start";
     
     [Parameter]
     public string HTML { get; set; } = "";

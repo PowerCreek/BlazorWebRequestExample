@@ -85,7 +85,7 @@ namespace basicblazorexamplewebapp.Controllers
                 IndexMap.TryAdd(guid, (count, val));
             }
             
-            Console.WriteLine(string.Join(",", guidList));
+            //Console.WriteLine(string.Join(",", guidList));
 
             return guidList;
         }
@@ -213,7 +213,6 @@ namespace basicblazorexamplewebapp.Controllers
             [HttpGet("/fetchnames")]
         public async Task<string> GetFetchNames([FromServices] MasterDBContext ctx, [FromBody] string jpaging)
         {
-            Console.WriteLine(jpaging);
             
             Paging paging = JsonConvert.DeserializeObject<Paging>(jpaging.ToString());
             
@@ -236,8 +235,6 @@ namespace basicblazorexamplewebapp.Controllers
         [HttpPost("/fetchnames")]
         public async Task<string> PostFetchNames([FromServices] MasterDBContext ctx, [FromBody] string jpaging)
         {
-            Console.WriteLine(jpaging);
-            
             Paging paging = JsonConvert.DeserializeObject<Paging>(jpaging.ToString());
             
             Console.WriteLine(paging.Page +":"+ paging.Interval);

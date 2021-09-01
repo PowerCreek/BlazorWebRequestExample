@@ -40,12 +40,21 @@
     flex-direction: row;
     justify-content: space-between;
     padding: 10px;
+    align-items: center;
     margin: 2px;
     border: 2px inset lightgray;
     border-radius: 4px;
     min-width: 180px;
     max-width: 180px;
     width: 100%;
+    overflow: hidden;
+    transition: max-height 1s, height 1s, opacity 1s;
+    opacity: 100%;
+}
+
+.shrink{
+    opacity: 0%;    
+    pointer-events: none;
 }
 
 .table-entry > *:last-child{

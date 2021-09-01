@@ -1,9 +1,17 @@
-﻿<div class="table-entry">
+﻿
+<div @key=@EntryKey class=@GetStyleClass>
     <div class="entry-content">@Content</div>
     <ConfiguredButton OnButton=@DoRemoveButtonClick HTML="X"></ConfiguredButton>
 </div>
 
 @code {
+
+    public HashSet<string> styleClass { get; set; } = new HashSet<string>(){{"table-entry"}};
+
+    public string GetStyleClass =>string.Join(" ", styleClass);
+
+    public string EntryKey { get; set; } = "";
+    
     [Parameter]
     public string Content { get; set; } = "no name";
 
@@ -11,11 +19,11 @@
     public string Id { get; set; } = "no id";
     
     [Parameter]
-    public Action<string> OnRemoveButtonClick { get; set; } = (_) => { };
+    public Action<TableEntry> OnRemoveButtonClick { get; set; } = (_) => { };
 
     public void DoRemoveButtonClick()
     {
-        OnRemoveButtonClick(Id);
+        OnRemoveButtonClick(this);
     }
     
 }

@@ -21,10 +21,10 @@
 
     public void DoSubmitButtonClick()
     {
-        if (string.IsNullOrEmpty(InputValue)) return;
-        
         string hold = InputValue;
         InputValue = "";
+        if (string.IsNullOrEmpty(hold) || string.IsNullOrWhiteSpace(hold)) return;
+        
         NameMethods.AddName(new Name() {Value = hold}).ContinueWith(
             e=> OnSubmitButtonClick());
         

@@ -8,35 +8,62 @@
 @code{
     public Action<object> Capture<T>(Action<T> act)=>(a) => act((T) a);
     
+    ///
+    ///I have not found a proper way to go about implementing blazor components without major issues
+    ///involving the access of shared variables and scoped functionality without doing this.
+    ///It is acceptable considering this runs in the browser.
+    ///My only issue is coming up with a solution to this that results in a coding pattern or paradigm that
+    ///makes sense without project code fragmentation. 
+    /// 
     public RenderFragment DisplaySheet()
     {
+
+        
         void CapAct(DynObject obj)
         {
             int page = 0;
             int interval = 5;
-
-            async void OnRemoveButtonClick(string id)
+            
+            //TODO Set up the Table Elements display element to do this on its own. Later.
+            void ModifyTable()
             {
-                Console.WriteLine(id);
-
-                if (!await NameMethods.RemoveName(id))
-                {
-                    Console.WriteLine("could not remove");
-                }
-
-                if (obj.TableData.Count == 1 && page > 0)
-                {
-                    page -= 1;
-                }
-                var hold = await NameMethods.GetNameInstances(page, interval);
-                
-                obj.TableData.Clear();
-                obj.TableData.AddRange(hold);
+                obj.TableChangeKey = Guid.NewGuid().ToString();
                 obj.StateChanged();
             }
 
+            //TODO Will have to have fetch data be stored in a location to be checked with a checksum
+            //to see if the data held matches other recent polls, as modifying what's in the table
+            //may have occured from another fetch that wasn't from this method.
+            //Doing this would allow for the program to place the most up-to-date collection.
+            //Probably an object like: Page, Items, TimeStamp, and Collection.
+            //We pull the latest timestamped collection, in the order that they were requested.
+            async void OnRemoveButtonClick(TableEntry entry)
+            {
+
+                int startPage = page;
+                Console.WriteLine(entry.Id);
+
+                entry.styleClass.Add("shrink");
+
+                if (!await NameMethods.RemoveName(entry.Id))
+                    Console.WriteLine("could not remove");
+                
+                if (obj.TableData.Count == 1 && page > 0)
+                    startPage = page-1;
+                
+                await Task.Delay(1200);
+                 
+                var hold = await NameMethods.GetNameInstances(startPage, interval);
+                if (startPage == page-1 || startPage == page)
+                {
+                    obj.TableData.Clear();
+                    obj.TableData.AddRange(hold);
+                    ModifyTable();
+                }
+            }
+
             obj.MakeWrapper = (content, id) => 
-                @<TableEntry Id=@id OnRemoveButtonClick=@((Action<string>) OnRemoveButtonClick) Content=@content/>;
+                @<TableEntry Id=@id OnRemoveButtonClick=@((Action<TableEntry>) OnRemoveButtonClick) Content=@content/>;
 
             EntryModal modalRef = null;
             
@@ -88,31 +115,30 @@
                 var hold = await NameMethods.GetNameInstances(page, interval);
                 obj.TableData.Clear();
                 obj.TableData.AddRange(hold);
-                obj.StateChanged();
+                ModifyTable();
             };
             
             obj.RightNavAction += async () =>
             {
                 page++;
+                
                 var hold = await NameMethods.GetNameInstances(page, interval);
                 if (hold.Length == 0)
-                {
                     page--;
-                }
                 
                 hold = await NameMethods.GetNameInstances(page, interval);
                 obj.TableData.Clear();
                 obj.TableData.AddRange(hold);
-                obj.StateChanged();
+                ModifyTable();
             };
     //
             NameMethods.GetNameInstances(0, 5).ContinueWith(e =>
             {
                 obj.TableData.Clear();
+                
                 foreach(var item in e.Result)
-                {
                     obj.TableData.Add(item);
-                }
+                
                 obj.StateChanged();
             });
         }
